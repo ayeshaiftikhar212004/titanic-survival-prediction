@@ -3,9 +3,13 @@ import streamlit as st
 import pickle
 import pandas as pd
 
-# Load the trained model
-with open("svc_trained_model.pkl", "rb") as file:
-    model = pickle.load(file)
+try:
+    with open("svc_trained_model.pkl", "rb") as file:
+        model = pickle.load(file)
+except Exception as e:
+    st.error("Model loading failed")
+    st.code(f"{type(e).__name__}: {e}")
+    st.stop()
 
 st.title("Titanic Passenger Survival Prediction")
 st.write("Enter passenger details to predict survival.")
