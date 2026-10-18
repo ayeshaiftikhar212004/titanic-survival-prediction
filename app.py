@@ -1,31 +1,32 @@
-
 import streamlit as st
 import pickle
-import pandas as pd
 
-try:
-    with open("svc_trained_model.pkl", "rb") as file:
-        model = pickle.load(file)
-except Exception as e:
-    st.error("Model loading failed")
-    st.code(f"{type(e).__name__}: {e}")
-    st.stop()
+# Load the trained model
+with open("svc_trained_model.pkl", "rb") as file:
+    model = pickle.load(file)
 
 st.title("Titanic Passenger Survival Prediction")
 st.write("Enter passenger details to predict survival.")
 
-pclass = st.selectbox("Passenger Class", [1, 2, 3])
+# Codes match the notebook's LabelEncoders (alphabetical order)
+PCLASS_CODES = {"First": 0, "Second": 1, "Third": 2}
+GENDER_CODES = {"Female": 0, "Male": 1}
+SIBLING_CODES = {"One": 0, "Three": 1, "Two": 2, "Zero": 3}
+EMBARKED_CODES = {"Cherbourg": 0, "Queenstown": 1, "Southampton": 2}
+
+pclass = st.selectbox("Passenger Class", ["First", "Second", "Third"])
 gender = st.selectbox("Gender", ["Male", "Female"])
-siblings = st.number_input("Number of Siblings/Spouses Aboard", min_value=0, max_value=10, value=0)
-embarked = st.selectbox("Port of Embarkation", ["S", "C", "Q"])
+siblings = st.selectbox("Number of Siblings/Spouses Aboard", ["Zero", "One", "Two", "Three"])
+embarked = st.selectbox("Port of Embarkation", ["Southampton", "Cherbourg", "Queenstown"])
 
 if st.button("Predict Survival"):
-    gender_value = 1 if gender == "Female" else 0
-
-    input_data = pd.DataFrame(
-        [[pclass, gender_value, siblings, embarked]],
-        columns=["PClass", "Gender", "Sibling", "Embarked"]
-    )
+    # Feature order must match training: Pclass, Gender, Sibling, Embarked
+    input_data = [[
+        PCLASS_CODES[pclass],
+        GENDER_CODES[gender],
+        SIBLING_CODES[siblings],
+        EMBARKED_CODES[embarked],
+    ]]
 
     try:
         prediction = model.predict(input_data)
@@ -34,5 +35,5 @@ if st.button("Predict Survival"):
         else:
             st.warning("Prediction: Passenger may not survive.")
     except Exception as error:
-        st.error("The model's expected input format differs from this app.")
+        st.error("Prediction failed.")
         st.write(str(error))
